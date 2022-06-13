@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" href="styles.css" />
+		<script src="webxdc.js"></script>
+	</head>
+
+	<body>
+		<div id="progressBar">
+			<div id="innerBar"></div>
+		</div>
+		<div id="board">
+			<div id="home">
+				<p>This is a memory game!</p>
+				<p>Flip cards and match as many pairs as you can</p>
+				<p>Ready?</p>
+				<button onclick="setup()" class="button">Start</button>
+			</div>
+		</div>
+
+		<div id="scores">
+			<button onclick="setup()" class="button">Play Again</button>
+			<p>Game over!</p>
+			<h1>HIGH SCORES</h1>
+			<div id="playersScore"></div>
+		</div>
+		<script>
+			// const board = document.querySelector("#board");
+			const emojis = [
+				"🍒",
+				"🥑",
+				"🍇",
+				"🍉",
+				"🥭",
+				"🍓",
+				"🍍",
+				"🍎",
+				"🥝",
+				"🍑",
+				"🍊",
+				"🥥",
+				"🥒",
+				"🍌",
+				"🍅",
+			];
+			let status = {
+				score: 0,
+				card1: {
+					stored: false,
+					content: null,
+					element: null,
+				},
+				card2: {
+					stored: false,
+					content: null,
+					element: null,
+				},
+				time: 0,
+				ranking: [],
+			};
+
+			let reference = {
+				home: document.querySelector("#home"),
+				board: document.querySelector("#board"),
+				scores: document.querySelector("#scores"),
+				progressBar: document.getElementById("progressBar"),
+				innerBar: document.getElementById("innerBar"),
+				width: 100,
+				playersScore: document.getElementById("playersScore"),
+			};
+
+			//setup the game
+			function setup() {
+				reference.home.style.display = "none";
+				status.score = 0;
+				newRound();
+				countDown();
+			}
+
+			//create the time bar
+			function countDown() {
+				reference.width = 100;
+				reference.progressBar.style.visibility = "visible";
+				reference.innerBar.style.visibility = "visible";
+				reference.innerBar.style.width = reference.width;
+				var id = setInterval(frame, 150); //game speed
+				function frame() {
+					if (reference.width <= 0) {
+						clearInterval(id);
+						finishGame();
+					} else {
+						reference.width--;
+						innerBar.style.width = reference.width + "%";
+					}
+				}
+			}
+
+			//create new card board
+			function newRound() {
+				reference.board.innerHTML = "";
+				reference.scores.style.display = "none";
+				let card;
+				//create new array with double emojis for the cards
+				var emojis2 = Array.from(emojis);
+				cardEmojis = [];
+				for (let i = 0; i < 5; i++) {
+					var index = Math.floor(
+						Math.random() * (emojis2.length - 1 - 0 + 1)
+					);
+					cardEmojis.push(emojis2[index]);
+					cardEmojis.push(emojis2[index]);
+					emojis2.splice(index,1);
+				}
+
+				for (let i = 0; i < 10; i++) {
+					//get a random emoji for each card and remove it from the array
+					var index = Math.floor(
+						Math.random() * (cardEmojis.length - 1 - 0 + 1)
+					);
+					var item = cardEmojis[index];
+					cardEmojis.splice(index, 1);
+
+					//put it into the card
+					card = document.createElement("div");
+					emoji = document.createElement("p");
+					emoji.appendChild(document.createTextNode(item));
+					card.appendChild(emoji);
+					card.classList.add("card");
+					card.setAttribute("id", "card" + i);
+					card.style.gridArea = "card" + (i + 1);
+					//add the event listener to flip it and add into the board
+					card.addEventListener("click", flipCard);
+					reference.board.insertAdjacentElement("beforeend", card);
+				}
+			}
+
+			function flipCard(event) {
+				if (status.card1.content == null) {
+					//save the first card
+					status.card1.content = event.target.textContent;
+					status.card1.element = event.target;
+					event.target.firstChild.style.visibility = "visible";
+					event.target.style.background = "white";
+					event.target.style.boxShadow = "none";
+				} else {
+					if (status.card2.content == null) {
+						status.card2.content = event.target.textContent;
+						status.card2.element = event.target;
+						event.target.firstChild.style.visibility = "visible";
+						event.target.style.background = "white";
+						event.target.style.boxShadow = "none";
+						if (
+							status.card1.content == status.card2.content &&
+							status.card1.element != status.card2.element
+						) {
+							//if it's the same card, flip it back
+
+							//if a different card but with the same image, increase score and time
+							status.score++;
+							reference.width + 10 <= 100
+								? (reference.width += 10)
+								: (reference.width = 100);
+							status.card1.content = null;
+							status.card1.element.removeEventListener("click", flipCard);
+							status.card1.element = null;
+							status.card2.content = null;
+							status.card2.element.removeEventListener("click", flipCard);
+							status.card2.element = null;
+							if (status.score % 5 == 0) setTimeout(newRound, 200);
+						} else {
+							var card1 = status.card1.element;
+							var card2 = status.card2.element;
+							setTimeout(function () {
+								card1.firstChild.style.visibility = "hidden";
+								card1.style.background = "radial-gradient(#60efa0, #58d55e)";
+								card1.style.boxShadow = "2px 2px 8px rgba(0, 0, 0, 0.5)";
+								card2.firstChild.style.visibility = "hidden";
+								card2.style.background = "radial-gradient(#60efa0, #58d55e)";
+								card2.style.boxShadow = "2px 2px 8px rgba(0, 0, 0, 0.5)";
+							}, 500);
+
+							status.card1.content = null;
+							status.card1.element = null;
+							status.card2.content = null;
+							status.card2.element = null;
+						}
+					}
+				}
+			}
+
+			function finishGame() {
+				//order the ranking and enter the new result
+				var player = { name: window.webxdc.selfName, score: status.score };
+				status.ranking.push(player);
+				status.ranking.sort((a, b) => {
+					return b.score - a.score;
+				});
+				//create the html 5 best players ranking
+				reference.playersScore.innerHTML = "";
+				for (let i = 0; i < 5; i++) {
+					var element = document.createElement("p");
+					element.textContent = status.ranking[i]
+						? status.ranking[i].name + ": " + status.ranking[i].score
+						: "";
+					reference.playersScore.insertAdjacentElement("beforeend", element);
+				}
+				//display the ranking
+				reference.scores.style.display = "block";
+
+				var info = window.webxdc.selfName + " made " + status.score + " pairs in Memory Game!";
+				window.webxdc.sendUpdate(
+					{
+						payload: {
+							name: window.webxdc.selfName,
+							score: status.score,
+						},
+						info,
+					},
+					info
+				);
+
+				// window.webxdc.sendUpdate(
+				// 	{ payload: { name: window.webxdc.selfName, score: status.score } },
+				// 	"someone made " + status.score + " pairs!"
+				// );
+			}
+
+			// function receiveUpdate(update) {
+			// 	//enter the new score
+			// 	var player = update.payload;
+			// 	status.ranking.push(player);
+			// }
+
+			// window.webxdc.setUpdateListener(receiveUpdate, 0);
+
+			window.webxdc.setUpdateListener(function (update) {
+				// document.getElementById("output").innerHTML +=
+				// 	"<strong>" +
+				// 	update.payload.name +
+				// 	":</strong> " +
+				// 	update.payload.msg +
+				// 	"<br>";
+				//enter the new score
+				var player = update.payload;
+				status.ranking.push(player);
+			});
+		</script>
+	</body>
+</html>
