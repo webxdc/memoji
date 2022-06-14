@@ -105,12 +105,10 @@
 				var emojis2 = Array.from(emojis);
 				cardEmojis = [];
 				for (let i = 0; i < 5; i++) {
-					var index = Math.floor(
-						Math.random() * (emojis2.length - 1 - 0 + 1)
-					);
+					var index = Math.floor(Math.random() * (emojis2.length - 1 - 0 + 1));
 					cardEmojis.push(emojis2[index]);
 					cardEmojis.push(emojis2[index]);
-					emojis2.splice(index,1);
+					emojis2.splice(index, 1);
 				}
 
 				for (let i = 0; i < 10; i++) {
@@ -190,60 +188,77 @@
 			}
 
 			function finishGame() {
-				//order the ranking and enter the new result
-				var player = { name: window.webxdc.selfName, score: status.score };
-				status.ranking.push(player);
-				status.ranking.sort((a, b) => {
-					return b.score - a.score;
-				});
+				var indexRanking;
+				//check if the player is already in the ranking and the score is higher
+				if (
+					status.ranking.some((player, index) => {
+						indexRanking = index;
+						return (
+							player.name === window.webxdc.selfName &&
+							status.score > player.score
+						);
+					})
+				) {
+					//change status and order ranking
+					status.ranking[indexRanking].score = status.score;
+					status.ranking.sort((a, b) => {
+						return b.score - a.score;
+					});
+
+					//send update
+					var info =
+						window.webxdc.selfName +
+						" made " +
+						status.score +
+						" pairs in Memory Game!";
+					window.webxdc.sendUpdate(
+						{
+							payload: {
+								ranking: status.ranking
+							},
+							info,
+						},
+						info
+					);
+				} else {
+					//if not in the ranking push him to the ranking and order the ranking
+					var player = { name: window.webxdc.selfName, score: status.score };
+					status.ranking.push(player);
+					status.ranking.sort((a, b) => {
+						return b.score - a.score;
+					});
+
+					//send update
+					var info =
+						window.webxdc.selfName +
+						" made " +
+						status.score +
+						" pairs in Memory Game!";
+					window.webxdc.sendUpdate(
+						{
+							payload: {
+								ranking: status.ranking
+							},
+							info,
+						},
+						info
+					);
+				}
+				
 				//create the html 5 best players ranking
 				reference.playersScore.innerHTML = "";
-				for (let i = 0; i < 5; i++) {
+				for (let i = 0; i < status.ranking.length; i++) {
 					var element = document.createElement("p");
-					element.textContent = status.ranking[i]
-						? status.ranking[i].name + ": " + status.ranking[i].score
-						: "";
+					element.textContent = status.ranking[i].name + ": " + status.ranking[i].score;
 					reference.playersScore.insertAdjacentElement("beforeend", element);
 				}
 				//display the ranking
 				reference.scores.style.display = "block";
-
-				var info = window.webxdc.selfName + " made " + status.score + " pairs in Memory Game!";
-				window.webxdc.sendUpdate(
-					{
-						payload: {
-							name: window.webxdc.selfName,
-							score: status.score,
-						},
-						info,
-					},
-					info
-				);
-
-				// window.webxdc.sendUpdate(
-				// 	{ payload: { name: window.webxdc.selfName, score: status.score } },
-				// 	"someone made " + status.score + " pairs!"
-				// );
 			}
 
-			// function receiveUpdate(update) {
-			// 	//enter the new score
-			// 	var player = update.payload;
-			// 	status.ranking.push(player);
-			// }
-
-			// window.webxdc.setUpdateListener(receiveUpdate, 0);
-
 			window.webxdc.setUpdateListener(function (update) {
-				// document.getElementById("output").innerHTML +=
-				// 	"<strong>" +
-				// 	update.payload.name +
-				// 	":</strong> " +
-				// 	update.payload.msg +
-				// 	"<br>";
-				//enter the new score
-				var player = update.payload;
-				status.ranking.push(player);
+				//change the ranking
+				status.ranking = update.payload.ranking;
 			});
 		</script>
 	</body>
