@@ -4,6 +4,7 @@
 		<meta charset="utf-8" />
 		<link rel="stylesheet" href="styles.css" />
 		<script src="webxdc.js"></script>
+		<script src="webxdc-scores.js"></script>
 	</head>
 
 	<body>
@@ -26,6 +27,8 @@
 			<div id="playersScore"></div>
 		</div>
 		<script>
+			window.highscores.init("Test Game");
+
 			// const board = document.querySelector("#board");
 			const emojis = [
 				"🍒",
@@ -78,6 +81,7 @@
 				countDown();
 			}
 
+			console.log(status.ranking);
 			//create the time bar
 			function countDown() {
 				reference.width = 100;
@@ -156,6 +160,9 @@
 
 							//if a different card but with the same image, increase score and time
 							status.score++;
+
+							window.highscores.setScore(status.score);
+
 							reference.width + 10 <= 100
 								? (reference.width += 10)
 								: (reference.width = 100);
@@ -188,78 +195,9 @@
 			}
 
 			function finishGame() {
-				var indexRanking;
-				//check if the player is already in the ranking and the score is higher
-				if (
-					status.ranking.some((player, index) => {
-						indexRanking = index;
-						return (
-							player.name === window.webxdc.selfName &&
-							status.score > player.score
-						);
-					})
-				) {
-					//change status and order ranking
-					status.ranking[indexRanking].score = status.score;
-					status.ranking.sort((a, b) => {
-						return b.score - a.score;
-					});
-
-					//send update
-					var info =
-						window.webxdc.selfName +
-						" made " +
-						status.score +
-						" pairs in Memory Game!";
-					window.webxdc.sendUpdate(
-						{
-							payload: {
-								ranking: status.ranking
-							},
-							info,
-						},
-						info
-					);
-				} else {
-					//if not in the ranking push him to the ranking and order the ranking
-					var player = { name: window.webxdc.selfName, score: status.score };
-					status.ranking.push(player);
-					status.ranking.sort((a, b) => {
-						return b.score - a.score;
-					});
-
-					//send update
-					var info =
-						window.webxdc.selfName +
-						" made " +
-						status.score +
-						" pairs in Memory Game!";
-					window.webxdc.sendUpdate(
-						{
-							payload: {
-								ranking: status.ranking
-							},
-							info,
-						},
-						info
-					);
-				}
-				
-				//create the html 5 best players ranking
-				reference.playersScore.innerHTML = "";
-				for (let i = 0; i < status.ranking.length; i++) {
-					var element = document.createElement("p");
-					element.textContent = status.ranking[i].name + ": " + status.ranking[i].score;
-					reference.playersScore.insertAdjacentElement("beforeend", element);
-				}
-				//display the ranking
+				reference.playersScore.innerHTML = window.highscores.getScoreboard();
 				reference.scores.style.display = "block";
 			}
-
-			window.webxdc.setUpdateListener(function (update) {
-				//change the ranking
-				status.ranking = update.payload.ranking;
-			});
 		</script>
 	</body>
 </html>
