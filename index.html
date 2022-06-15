@@ -27,7 +27,7 @@
 			<div id="playersScore"></div>
 		</div>
 		<script>
-			window.highscores.init("Test Game");
+			window.highscores.init("Memoji");
 
 			// const board = document.querySelector("#board");
 			const emojis = [
@@ -160,9 +160,6 @@
 
 							//if a different card but with the same image, increase score and time
 							status.score++;
-
-							window.highscores.setScore(status.score);
-
 							reference.width + 10 <= 100
 								? (reference.width += 10)
 								: (reference.width = 100);
@@ -195,6 +192,7 @@
 			}
 
 			function finishGame() {
+				window.highscores.setScore(status.score);
 				reference.playersScore.innerHTML = window.highscores.getScoreboard();
 				reference.scores.style.display = "block";
 			}
